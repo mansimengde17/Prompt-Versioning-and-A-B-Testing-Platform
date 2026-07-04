@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt Versioning and A/B Testing Platform | Live Demo</title>
+<meta name="description" content="Prompts as versioned artifacts with diffs and rollback, deterministic traffic splitting, pluggable metrics, and Welch's t-test declaring statistically significant winners.">
+<style>
+:root {
+  --accent: #5b8cff;
+  --accent2: #57d9c8;
+  --bg: #05060f;
+  --panel: rgba(13, 16, 33, 0.82);
+  --line: rgba(120, 140, 255, 0.16);
+  --text: #dfe4ff;
+  --muted: #8a93c4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+#bg3d { position: fixed; inset: 0; z-index: 0; }
+.wrap { position: relative; z-index: 1; max-width: 1060px;
+        margin: 0 auto; padding: 0 24px; }
+nav { display: flex; justify-content: space-between; align-items: center;
+      padding: 22px 0; }
+nav .brand { font-weight: 700; letter-spacing: 2px; font-size: 13px;
+             color: var(--muted); text-transform: uppercase; }
+nav .links a { color: var(--text); text-decoration: none; font-size: 14px;
+               margin-left: 22px; padding: 8px 14px; border: 1px solid
+               var(--line); border-radius: 8px; transition: all .25s; }
+nav .links a:hover { border-color: var(--accent); color: var(--accent);
+                     box-shadow: 0 0 18px color-mix(in srgb, var(--accent)
+                     35%, transparent); }
+header { min-height: 78vh; display: flex; flex-direction: column;
+         justify-content: center; }
+.kicker { color: var(--accent); font-size: 13px; letter-spacing: 3px;
+          text-transform: uppercase; margin-bottom: 18px; font-weight: 600; }
+h1 { font-size: clamp(34px, 5.6vw, 62px); line-height: 1.06;
+     background: linear-gradient(120deg, #fff, var(--accent) 55%,
+     var(--accent2)); -webkit-background-clip: text;
+     background-clip: text; color: transparent; max-width: 820px; }
+.tagline { margin-top: 22px; font-size: 18px; color: var(--muted);
+           max-width: 680px; line-height: 1.6; }
+.cta { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; }
+.cta a { text-decoration: none; padding: 13px 26px; border-radius: 10px;
+         font-size: 15px; font-weight: 600; transition: transform .2s; }
+.cta a:hover { transform: translateY(-2px); }
+.cta .primary { background: linear-gradient(120deg, var(--accent),
+                var(--accent2)); color: #04050c; }
+.cta .ghost { border: 1px solid var(--line); color: var(--text); }
+section { padding: 60px 0; }
+h2 { font-size: 26px; margin-bottom: 8px; }
+.sub { color: var(--muted); margin-bottom: 28px; font-size: 15px; }
+.panel { background: var(--panel); border: 1px solid var(--line);
+         border-radius: 16px; padding: 26px;
+         backdrop-filter: blur(12px); }
+.sim-controls { display: flex; gap: 10px; flex-wrap: wrap;
+                margin-bottom: 18px; }
+.sim-controls button { background: rgba(255,255,255,0.04); color: var(--text);
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 18px;
+  font-size: 14px; cursor: pointer; transition: all .2s;
+  font-family: inherit; }
+.sim-controls button:hover, .sim-controls button.active {
+  border-color: var(--accent); color: var(--accent); }
+.sim-stage { min-height: 320px; }
+.statrow { display: grid; grid-template-columns: repeat(auto-fit,
+           minmax(140px, 1fr)); gap: 12px; margin-top: 18px; }
+.stat { border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+        text-align: center; }
+.stat .v { font-size: 24px; font-weight: 700; color: var(--accent); }
+.stat .l { font-size: 12px; color: var(--muted); margin-top: 4px;
+           letter-spacing: 1px; text-transform: uppercase; }
+.arch { display: grid; gap: 12px; }
+.arch .step { display: flex; gap: 16px; align-items: flex-start;
+              border: 1px solid var(--line); border-radius: 12px;
+              padding: 16px 18px; background: rgba(255,255,255,0.02);
+              transition: border-color .3s; }
+.arch .step:hover { border-color: var(--accent); }
+.arch .n { min-width: 34px; height: 34px; border-radius: 9px;
+           display: flex; align-items: center; justify-content: center;
+           font-weight: 700; color: #04050c;
+           background: linear-gradient(120deg, var(--accent),
+           var(--accent2)); }
+.arch b { display: block; margin-bottom: 4px; }
+.arch p { color: var(--muted); font-size: 14px; line-height: 1.55; }
+pre { background: #090b18; border: 1px solid var(--line);
+      border-radius: 12px; padding: 20px; overflow-x: auto; font-size: 13px;
+      line-height: 1.7; color: #b9c3f5;
+      font-family: "Cascadia Code", Consolas, monospace; }
+pre .c { color: #5c668f; }
+canvas.sim { width: 100%; border-radius: 12px; display: block;
+             background: #080a16; border: 1px solid var(--line); }
+.log { font-family: Consolas, monospace; font-size: 12.5px; background:
+       #080a16; border: 1px solid var(--line); border-radius: 12px;
+       padding: 14px; height: 170px; overflow-y: auto; line-height: 1.65;
+       margin-top: 14px; }
+.log .ok { color: #57d98e; } .log .warn { color: #e8c15a; }
+.log .bad { color: #ff6b7f; } .log .dim { color: #66709d; }
+footer { padding: 40px 0 60px; color: var(--muted); font-size: 13px;
+         border-top: 1px solid var(--line); margin-top: 40px; }
+footer a { color: var(--accent); text-decoration: none; }
+@media (max-width: 640px) { nav .links a { margin-left: 8px;
+  padding: 7px 10px; font-size: 12.5px; } }
+</style>
+</head>
+<body>
+<canvas id="bg3d"></canvas>
+<div class="wrap">
+<nav>
+  <div class="brand">Mansi Mengde / AI Engineering</div>
+  <div class="links">
+    <a href="https://mansimengde17.github.io/Real-Time-Financial-Intelligence-Platform/">Portfolio</a>
+    <a href="https://github.com/mansimengde17/Prompt-Versioning-and-A-B-Testing-Platform" target="_blank" rel="noopener">GitHub Repository</a>
+  </div>
+</nav>
+<header>
+  <div class="kicker">Feature-flag rigor for prompts</div>
+  <h1>Prompt Versioning and A/B Testing Platform</h1>
+  <p class="tagline">Prompts as versioned artifacts with diffs and rollback, deterministic traffic splitting, pluggable metrics, and Welch's t-test declaring statistically significant winners.</p>
+  <div class="cta">
+    <a class="primary" href="#demo">Run the live demo</a>
+    <a class="ghost" href="#architecture">Architecture</a>
+    <a class="ghost" href="#usage">How to use</a>
+  </div>
+</header>
+
+<section id="demo">
+  <h2>Live interactive demo</h2>
+  <p class="sub">This simulation runs the system's real decision logic
+  directly in your browser. Three live variants split traffic; watch the quality distributions separate until significance is reached.</p>
+  <div class="panel">
+    <div class="sim-controls" id="controls"></div>
+    <div class="sim-stage" id="stage"></div>
+  </div>
+</section>
+
+<section id="architecture">
+  <h2>Architecture</h2>
+  <p class="sub">How a request moves through the system.</p>
+  <div class="arch">
+    <div class="step"><div class="n">1</div><div><b>Prompt registry</b><p>Auto-incrementing versions with commit messages, unified diffs between any two versions, template variables validated at serve time, and one-call rollback.</p></div></div>
+    <div class="step"><div class="n">2</div><div><b>Experiment engine</b><p>Variants with traffic percentages; assignment is a consistent hash of the user id, so the same user always sees the same variant.</p></div></div>
+    <div class="step"><div class="n">3</div><div><b>Metric collectors</b><p>Latency, tokens, and cost built in; custom metrics like LLM-as-judge quality plug into the same async collection path.</p></div></div>
+    <div class="step"><div class="n">4</div><div><b>Statistics</b><p>Welch&#x27;s t-test per metric with p-values, confidence intervals, and minimum detectable effect at the current sample size.</p></div></div>
+    <div class="step"><div class="n">5</div><div><b>Guardrails and audit</b><p>Experiments auto-stop on error-rate spikes; every creation, activation, winner declaration, and rollback lands in the audit log.</p></div></div>
+  </div>
+</section>
+
+<section id="usage">
+  <h2>How to use</h2>
+  <p class="sub">Runs fully offline with a deterministic provider; add API
+  keys to switch to live models.</p>
+  <pre><span class="c"># offline: three variants, 600 requests, a winner</span>
+pip install -r requirements.txt
+python demo.py
+<span class="c"># -> v3 wins, p &lt; 0.00001; promoted to active with audit trail</span>
+
+uvicorn src.promptlab.api:app --reload
+curl -X POST localhost:8000/v1/completions \
+  -d '{"prompt_id": 1, "variables": {"email": "..."}, "user_id": "u-42"}'</pre>
+</section>
+
+<footer>
+  Part of the <a href="https://mansimengde17.github.io/Real-Time-Financial-Intelligence-Platform/">AI Engineering Portfolio</a> by
+  Mansi Mengde. Source code and documentation:
+  <a href="https://github.com/mansimengde17/Prompt-Versioning-and-A-B-Testing-Platform">Prompt-Versioning-and-A-B-Testing-Platform</a>.
+</footer>
+</div>
+
+<script src="three.min.js"></script>
+<script>
+if (typeof THREE === 'undefined') {
+  document.write('<scr' + 'ipt src="https://cdnjs.cloudflare.com/ajax/libs/'
+    + 'three.js/r128/three.min.js"><\/scr' + 'ipt>');
+}
+</script>
+<script>
+(function () {
+  var canvas = document.getElementById('bg3d');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true,
+    antialias: true });
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x05060f, 0.028);
+  var camera = new THREE.PerspectiveCamera(62, 1, 0.1, 200);
+  camera.position.set(0, 0, 26);
+
+  var accent = new THREE.Color('#5b8cff');
+  var accent2 = new THREE.Color('#57d9c8');
+
+  // Particle field
+  var N = 900, positions = new Float32Array(N * 3),
+      colors = new Float32Array(N * 3);
+  for (var i = 0; i < N; i++) {
+    positions[3*i] = (Math.random() - 0.5) * 90;
+    positions[3*i+1] = (Math.random() - 0.5) * 55;
+    positions[3*i+2] = (Math.random() - 0.5) * 60 - 8;
+    var c = Math.random() < 0.5 ? accent : accent2;
+    colors[3*i] = c.r; colors[3*i+1] = c.g; colors[3*i+2] = c.b;
+  }
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  var points = new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.16, vertexColors: true, transparent: true, opacity: 0.85 }));
+  scene.add(points);
+
+  // Central hero geometry (per project)
+  var heroGroup = new THREE.Group();
+  
+  var gw = new THREE.Mesh(new THREE.PlaneGeometry(46, 30, 42, 28),
+    new THREE.MeshStandardMaterial({ color: 0x0d1024, wireframe: true,
+      emissive: accent.getHex(), emissiveIntensity: 0.22 }));
+  gw.rotation.x = -Math.PI / 2.6; gw.position.y = -7;
+  heroGroup.add(gw);
+  heroGroup.userData.wave = gw;
+  var octa = new THREE.Mesh(new THREE.OctahedronGeometry(3.6, 0),
+    new THREE.MeshStandardMaterial({ color: 0x0d1024, wireframe: true,
+      emissive: accent2.getHex(), emissiveIntensity: 0.5 }));
+  octa.position.y = 2;
+  heroGroup.add(octa);
+  scene.add(heroGroup);
+
+  var l1 = new THREE.PointLight(accent.getHex(), 1.4, 120);
+  l1.position.set(18, 12, 20);
+  var l2 = new THREE.PointLight(accent2.getHex(), 1.1, 120);
+  l2.position.set(-16, -10, 14);
+  scene.add(l1, l2, new THREE.AmbientLight(0x30355c, 0.7));
+
+  var mouseX = 0, mouseY = 0;
+  window.addEventListener('mousemove', function (e) {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+  function resize() {
+    var w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize); resize();
+
+  var t = 0;
+  (function animate() {
+    requestAnimationFrame(animate);
+    t += 0.005;
+    points.rotation.y = t * 0.35;
+    points.rotation.x = Math.sin(t * 0.4) * 0.08;
+    heroGroup.rotation.y += 0.004;
+    heroGroup.rotation.x = Math.sin(t * 0.7) * 0.22;
+    heroGroup.position.y = Math.sin(t * 1.1) * 0.9;
+    camera.position.x += (mouseX * 3.2 - camera.position.x) * 0.04;
+    camera.position.y += (-mouseY * 2.2 - camera.position.y) * 0.04;
+    camera.lookAt(0, 0, 0);
+    var scroll = Math.min(window.scrollY / window.innerHeight, 2.2);
+    heroGroup.position.z = -scroll * 9;
+    points.material.opacity = Math.max(0.25, 0.85 - scroll * 0.28);
+    renderer.render(scene, camera);
+  })();
+})();
+</script>
+<script>
+(function () {
+  var stage = document.getElementById('stage');
+  var controls = document.getElementById('controls');
+  var ACCENT = '#5b8cff', ACCENT2 = '#57d9c8';
+
+  function el(tag, cls, html) { var e = document.createElement(tag);
+    if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html;
+    return e; }
+  function logLine(box, cls, text) { var d = el('div', cls, text);
+    box.appendChild(d); box.scrollTop = box.scrollHeight; return d; }
+  function btn(label, fn) { var b = el('button', '', label);
+    b.onclick = function () {
+      Array.prototype.forEach.call(controls.children, function (c) {
+        c.classList.remove('active'); });
+      b.classList.add('active'); fn(); };
+    controls.appendChild(b); return b; }
+  function stats(defs) { var row = el('div', 'statrow'); var out = {};
+    defs.forEach(function (d) { var s = el('div', 'stat');
+      var v = el('div', 'v', d[1]); s.appendChild(v);
+      s.appendChild(el('div', 'l', d[0])); row.appendChild(s);
+      out[d[0]] = v; });
+    stage.appendChild(row); return out; }
+
+  // Prompt A/B testing: three variants split traffic; watch the metric
+  // distributions converge to statistical significance.
+  var canvas = el('canvas', 'sim'); stage.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  var VARIANTS = [
+    { name: 'v1 zero-shot', mean: 0.60, color: '#66709d', samples: [] },
+    { name: 'v2 few-shot', mean: 0.68, color: ACCENT2, samples: [] },
+    { name: 'v3 chain-of-thought', mean: 0.688, color: ACCENT, samples: [] }];
+  var S = stats([['samples', '0'], ['p-value (v1 vs v3)', '--'],
+                 ['status', 'RUNNING'], ['winner', '--']]);
+  var out = el('div', 'log'); stage.appendChild(out);
+  var total = 0, done = false, on = true;
+  function tstat(a, b) {
+    function mv(x) { var m = x.reduce(function (p, q) { return p + q; }, 0)
+      / x.length; var v = x.reduce(function (p, q) {
+        return p + (q - m) * (q - m); }, 0) / (x.length - 1);
+      return [m, v]; }
+    var A = mv(a), B = mv(b);
+    var se = Math.sqrt(A[1] / a.length + B[1] / b.length);
+    if (!se) return [0, 1];
+    var t = (B[0] - A[0]) / se;
+    var p = Math.exp(-0.717 * Math.abs(t) - 0.416 * t * t) * 2;
+    return [t, Math.min(1, p)];
+  }
+  function draw() {
+    var w = canvas.width = canvas.clientWidth * 2, h = canvas.height = 520;
+    ctx.clearRect(0, 0, w, h);
+    ctx.font = '20px Consolas';
+    VARIANTS.forEach(function (v, vi) {
+      var x0 = w * (0.08 + vi * 0.31), bw = w * 0.24;
+      // histogram of quality samples
+      var bins = new Array(20).fill(0);
+      v.samples.forEach(function (s) {
+        bins[Math.max(0, Math.min(19, Math.floor((s - 0.3) / 0.03)))]++; });
+      var peak = Math.max.apply(null, bins.concat([1]));
+      bins.forEach(function (b, i) {
+        var bh = (b / peak) * (h - 170);
+        ctx.fillStyle = v.color + '99';
+        ctx.fillRect(x0 + i * (bw / 20), h - 90 - bh, bw / 22, bh);
+      });
+      ctx.fillStyle = v.color;
+      ctx.fillText(v.name + '  n=' + v.samples.length, x0, h - 52);
+      if (v.samples.length) {
+        var m = v.samples.reduce(function (p, q) { return p + q; }, 0)
+          / v.samples.length;
+        ctx.fillStyle = '#dfe4ff';
+        ctx.fillText('mean ' + m.toFixed(3), x0, h - 22);
+      }
+    });
+    requestAnimationFrame(draw);
+  }
+  var feeder = setInterval(function () {
+    if (!on || done) return;
+    for (var k = 0; k < 3; k++) {
+      var v = VARIANTS[Math.floor(Math.random() * 3)];
+      var s = v.mean + (Math.random() + Math.random() + Math.random() - 1.5)
+        * 0.16;
+      v.samples.push(Math.max(0.3, Math.min(0.95, s)));
+      total++;
+    }
+    S['samples'].textContent = total;
+    if (VARIANTS[0].samples.length > 12) {
+      var tp = tstat(VARIANTS[0].samples, VARIANTS[2].samples);
+      S['p-value (v1 vs v3)'].textContent = tp[1] < 0.00001
+        ? '<0.00001' : tp[1].toFixed(5);
+      if (tp[1] < 0.05 && VARIANTS.every(function (v) {
+            return v.samples.length >= 150; }) && !done) {
+        done = true;
+        S['status'].textContent = 'SIGNIFICANT';
+        var best = VARIANTS.reduce(function (a, b) {
+          function m(x) { return x.samples.reduce(function (p, q) {
+            return p + q; }, 0) / x.samples.length; }
+          return m(a) > m(b) ? a : b; });
+        S['winner'].textContent = best.name;
+        logLine(out, 'ok', 'WINNER: ' + best.name
+          + ' reached significance at 95% confidence');
+        logLine(out, 'ok', 'audit: winner_declared; version promoted to'
+          + ' active after hold period');
+      }
+    }
+  }, 120);
+  var toggle = el('button', '', 'Pause experiment');
+  toggle.onclick = function () { on = !on;
+    toggle.textContent = on ? 'Pause experiment' : 'Resume experiment'; };
+  controls.appendChild(toggle);
+  var reset = el('button', '', 'Restart experiment');
+  reset.onclick = function () {
+    VARIANTS.forEach(function (v) { v.samples = []; });
+    total = 0; done = false; S['status'].textContent = 'RUNNING';
+    S['winner'].textContent = '--'; out.innerHTML = ''; };
+  controls.appendChild(reset);
+  logLine(out, 'dim', 'Traffic splits 34/33/33 across three prompt'
+    + ' variants via consistent hashing; significance is tested'
+    + ' continuously with Welch\'s t-test.');
+  draw();
+
+})();
+</script>
+</body>
+</html>
