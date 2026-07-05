@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Prompt Versioning and A/B Testing Platform | Live Demo</title>
-<meta name="description" content="Prompts as versioned artifacts with diffs and rollback, deterministic traffic splitting, pluggable metrics, and Welch's t-test declaring statistically significant winners.">
+<meta name="description" content="Prompts as versioned artifacts with diffs and rollback, deterministic traffic splitting, pluggable metrics, and Welch's t test declaring statistically significant winners.">
 <style>
 :root {
   --accent: #5b8cff;
@@ -118,9 +118,9 @@ footer a { color: var(--accent); text-decoration: none; }
   </div>
 </nav>
 <header>
-  <div class="kicker">Feature-flag rigor for prompts</div>
+  <div class="kicker">Feature flag rigor for prompts</div>
   <h1>Prompt Versioning and A/B Testing Platform</h1>
-  <p class="tagline">Prompts as versioned artifacts with diffs and rollback, deterministic traffic splitting, pluggable metrics, and Welch's t-test declaring statistically significant winners.</p>
+  <p class="tagline">Prompts as versioned artifacts with diffs and rollback, deterministic traffic splitting, pluggable metrics, and Welch's t test declaring statistically significant winners.</p>
   <div class="cta">
     <a class="primary" href="#demo">Run the live demo</a>
     <a class="ghost" href="#architecture">Architecture</a>
@@ -142,11 +142,11 @@ footer a { color: var(--accent); text-decoration: none; }
   <h2>Architecture</h2>
   <p class="sub">How a request moves through the system.</p>
   <div class="arch">
-    <div class="step"><div class="n">1</div><div><b>Prompt registry</b><p>Auto-incrementing versions with commit messages, unified diffs between any two versions, template variables validated at serve time, and one-call rollback.</p></div></div>
+    <div class="step"><div class="n">1</div><div><b>Prompt registry</b><p>Auto incrementing versions with commit messages, unified diffs between any two versions, template variables validated at serve time, and one call rollback.</p></div></div>
     <div class="step"><div class="n">2</div><div><b>Experiment engine</b><p>Variants with traffic percentages; assignment is a consistent hash of the user id, so the same user always sees the same variant.</p></div></div>
-    <div class="step"><div class="n">3</div><div><b>Metric collectors</b><p>Latency, tokens, and cost built in; custom metrics like LLM-as-judge quality plug into the same async collection path.</p></div></div>
-    <div class="step"><div class="n">4</div><div><b>Statistics</b><p>Welch&#x27;s t-test per metric with p-values, confidence intervals, and minimum detectable effect at the current sample size.</p></div></div>
-    <div class="step"><div class="n">5</div><div><b>Guardrails and audit</b><p>Experiments auto-stop on error-rate spikes; every creation, activation, winner declaration, and rollback lands in the audit log.</p></div></div>
+    <div class="step"><div class="n">3</div><div><b>Metric collectors</b><p>Latency, tokens, and cost built in; custom metrics like model as judge quality plug into the same async collection path.</p></div></div>
+    <div class="step"><div class="n">4</div><div><b>Statistics</b><p>Welch&#x27;s t test per metric with p values, confidence intervals, and minimum detectable effect at the current sample size.</p></div></div>
+    <div class="step"><div class="n">5</div><div><b>Guardrails and audit</b><p>Experiments auto stop on error rate spikes; every creation, activation, winner declaration, and rollback lands in the audit log.</p></div></div>
   </div>
 </section>
 
@@ -379,7 +379,7 @@ if (typeof THREE === 'undefined') {
   controls.appendChild(reset);
   logLine(out, 'dim', 'Traffic splits 34/33/33 across three prompt'
     + ' variants via consistent hashing; significance is tested'
-    + ' continuously with Welch\'s t-test.');
+    + ' continuously with Welch\'s t test.');
   draw();
 
 })();
